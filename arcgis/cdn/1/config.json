@@ -1,0 +1,151 @@
+{
+  "pages": {
+    "page_0": {
+      "id": "page_0",
+      "mode": "FIT_WINDOW",
+      "type": "NORMAL",
+      "layout": {
+        "LARGE": "layout_0"
+      },
+      "isDefault": true,
+      "isVisible": true,
+      "label": "Page"
+    }
+  },
+  "layouts": {
+    "layout_0": {
+      "type": "FIXED",
+      "content": {
+        "0": {
+          "type": "WIDGET",
+          "bbox": {
+            "left": "0.0%",
+            "right": "70.6%",
+            "top": "0.0%",
+            "bottom": "0.0%",
+            "width": "29.4%",
+            "height": "100.0%"
+          },
+          "widgetId": "widget_1",
+          "setting": {
+            "autoProps": {
+              "left": false,
+              "right": true,
+              "top": true,
+              "bottom": false
+            }
+          }
+        },
+        "1": {
+          "type": "WIDGET",
+          "bbox": {
+            "left": "29.4%",
+            "right": "3.2%",
+            "top": "0.0%",
+            "bottom": "10.6%",
+            "width": "67.4%",
+            "height": "89.4%"
+          },
+          "widgetId": "widget_2",
+          "setting": {
+            "autoProps": {
+              "left": true,
+              "right": false,
+              "top": false,
+              "bottom": true
+            }
+          }
+        }
+      },
+      "order": [
+        "0",
+        "1"
+      ]
+    },
+    "layout_1": {
+      "type": "FIXED",
+      "label": "Map FixedLayout"
+    }
+  },
+  "exbVersion": "1.8.0",
+  "mainSizeMode": "LARGE",
+  "theme": "themes/default/",
+  "forBuilderAttributes": {
+    "lockLayout": false
+  },
+  "template": "blankfullscreen",
+  "widgets": {
+    "widget_1": {
+      "uri": "widgets/simple/",
+      "version": "1.8.0",
+      "label": "Simple",
+      "config": {
+        "exampleConfigProperty": "test"
+      },
+      "id": "widget_1"
+    },
+    "widget_2": {
+      "uri": "widgets/arcgis/arcgis-map/",
+      "version": "1.8.0",
+      "label": "Map",
+      "config": {
+        "toolConifg": {
+          "canZoom": true,
+          "canHome": true,
+          "canSearch": true,
+          "canNavigation": true
+        },
+        "isUseCustomMapState": false
+      },
+      "id": "widget_2",
+      "layouts": {
+        "MapFixedLayout": {
+          "LARGE": "layout_1"
+        }
+      },
+      "useDataSources": [
+        {
+          "dataSourceId": "dataSource_2",
+          "mainDataSourceId": "dataSource_2"
+        }
+      ]
+    }
+  },
+  "widgetsManifest": {},
+  "views": {},
+  "sections": {},
+  "dialogs": {},
+  "dataSources": {
+    "dataSource_2": {
+      "id": "dataSource_2",
+      "type": "WEB_SCENE",
+      "sourceLabel": "LXRP 3D Map",
+      "itemId": "d11e85f020d743f9a62574f9989d59f9",
+      "portalUrl": "https://levelcrossings.maps.arcgis.com"
+    }
+  },
+  "messageConfigs": {},
+  "attributes": {
+    "portalUrl": "https://levelcrossings.maps.arcgis.com",
+    "isWebTier": false,
+    "clientId": "",
+    "title": "Experce Dev",
+    "description": "",
+    "type": "Web Experience",
+    "thumbnail": null
+  },
+  "sharedThemeVariables": {
+    "header": {},
+    "body": {},
+    "button": {},
+    "logo": {
+      "small": "https://levelcrossings.maps.arcgis.com/sharing/rest/content/items/e3ad584b24ee462eb61c762a55dd9359/data"
+    }
+  },
+  "pageStructure": [
+    {
+      "page_0": []
+    }
+  ],
+  "timestamp": 1657736684214
+}
