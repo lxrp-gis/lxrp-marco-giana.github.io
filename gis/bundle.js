@@ -2447,25 +2447,51 @@ var esriLoader = __importStar(require("esri-loader"));
 //The call set Identity manager.
 var Authenticate = /** @class */ (function () {
     function Authenticate() {
-        var _this = this;
+        // if (document.location.protocol == "file:") {
+        //     let url = "file:///" + this.agolFile;
+        //     axios.get(url).then((response) => {
         this.agolFile = process.env.APPDATA + "/lxrp-gis-viewer/.agol";
         this.agolAuth = null;
-        var url = "file:///" + this.agolFile;
-        axios_1.default.get(url).then(function (response) {
-            if (response.data.error) {
-                console.error(response);
-                _this.agolAuth = {};
-            }
-            else {
-                _this.agolAuth = response.data;
-                _this.isExpired();
-            }
-        })
-            .catch(function (error) {
-            // handle error
-            console.error(error);
-            this.agolAuth = {};
-        });
+        //         if (response.data.error) {
+        //             console.error(response);
+        //             this.agolAuth = {}
+        //         }
+        //         else {
+        //             this.agolAuth = response.data
+        //             this.isExpired();
+        //         }
+        //     })
+        //     .catch(function (error) {
+        //         // handle error
+        //         console.error(error);
+        //         this.agolAuth = {}
+        //     });
+        // }
+        // else {
+        // }
+        this.agolAuth = {
+            "access_token": null,
+            "expires_in": null,
+            "username": null,
+            "ssl": true,
+            "refresh_token": null,
+            "refresh_token_expires_in": null,
+            "expires": null,
+            "refresh_token_expires": null,
+            "server": null,
+            "client_id": null,
+            "redirect_url": null
+        };
+        console.debug(document.location);
+        var urlObj = new URL(location.href);
+        var searchParams = urlObj.searchParams;
+        for (var parameter in this.agolAuth) {
+            var value = searchParams.get(parameter);
+            console.debug("".concat(parameter, ": ").concat(value));
+            this.agolAuth[parameter] = value;
+        }
+        console.debug(this.agolAuth);
+        this.isExpired();
     }
     Authenticate.prototype.isExpired = function () {
         var expires = this.agolAuth["expires"];
