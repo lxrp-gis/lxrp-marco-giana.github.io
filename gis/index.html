@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.24/"></script>
+    <script src="https://unpkg.com/vue@3"></script>
+
+    <style>
+        :root {
+            --offset: 5px;
+            --iconSize: 32px;
+            --widthLeftPanel: 400px;
+            --buttonProgressWidth: 50%;
+        }
+    </style>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgb(168, 168, 168);
+        }
+        ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner {
+            background: rgb(227, 227, 227);
+        }
+        html,
+        body,
+        #appContainer {
+            padding: 0px;
+            margin: 0px;
+            height: 100%;
+            width: 100%;
+            background-color: lightgray;
+        }
+        a {
+            text-decoration: none;
+            color: #000;
+        }
+        h4 {
+            margin: var(--offset);
+            margin-left: 0px;
+        }
+        .mapView {
+            /*background-color: lightgray;*/
+            height: 100%;
+            width: calc(100% + 30px);
+            position: absolute;
+        }
+        ul.locateList, ol.locateList {
+            line-height: unset;
+            list-style-type: none;
+            padding: 0;
+        }
+        li.esri-widget--button {
+            display: flex;
+            flex-flow: row nowrap;
+            border-top: solid 1px lightgray;
+            width: var(--widthLeftPanel);
+            justify-content: left;
+            padding: var(--offset);
+        }
+        #leftPanel {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: var(--widthLeftPanel);
+            height: 100%;
+            overflow: hidden;
+            margin: 0px;
+            background-color: white;
+        }
+        #mapPanel {
+            position: absolute;
+            left: var(--widthLeftPanel);
+            height: 100%;
+            width: calc(100% - var(--widthLeftPanel) - 30px);
+        }
+        #toolContainer {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            display: flex;
+            flex-flow: column nowrap;
+        }
+        #locateMenu {
+            display: flex;
+            flex-flow: row;
+            position: sticky;
+            top: 0px;
+            width: 100%;
+            background-color: white;
+        }
+        #buttonMapSplit > span {
+            font-size: 0.9em;
+        }
+        .panel {
+            height: 100%;
+            overflow: hidden;
+            overflow-y: auto;
+            margin-left: var(--offset);
+            margin-top: var(--offset);
+            margin-bottom: var(--offset);
+        }
+        button {
+            position: relative;
+            border: solid 1px;
+            min-width: 16px;
+            min-height: 16px;
+            width: var(--iconSize);
+            height: var(--iconSize);
+        }
+        img.menu {
+            width: 95%;
+        }
+        img.listIcon {
+            width: var(--iconSize);
+            height: var(--iconSize);
+        }
+        .listText {
+            font-size: 0.85em;
+            padding-left: var(--offset);
+            text-align: left;
+        }
+        .locateList {
+            top: 42px;
+            background-color: white;
+            height: calc(100% - 42px);
+            width: calc(var(--widthLeftPanel) - var(--offset));
+            padding-left: var(--offset);
+        }
+        .fieldList {
+            margin-top: var(--offset);
+            margin-right: var(--offset);
+        }
+        .fieldHeader {
+            font-weight: bold;
+        }
+        .fieldValue {
+            float:right;
+        }
+        .esri-icon-non-visible::before {
+            content: "\e610"!important;
+        }
+        .esri-icon-visible::before {
+            content: "\e611"!important;
+        }
+        .esri-widget {
+            --esri-widget-padding-v: 0px;
+            --esri-widget-padding-h: 0px;
+        }
+        .esri-layer-list__item {
+            margin: 0px;
+        }
+        .progress {
+            position: absolute;
+            top: calc(var(--iconSize) - 3px);
+            background-color:  #6e6e6e;
+            width: var(--buttonProgressWidth);
+            height: 2px;
+            animation: looping-progresss-bar-ani 1000ms linear infinite
+        }
+        @keyframes looping-progresss-bar-ani {
+            0% {
+                left: 0%;
+                width: 0%;
+            }
+            20% {
+                left: 0%;
+                width: var(--buttonProgressWidth);
+            }
+            80% {
+                left: calc(100% - var(--buttonProgressWidth));
+                width: var(--buttonProgressWidth)
+            }
+            100% {
+                left: 100%;
+                width: 0%
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="appContainer">
+        <div id="leftPanel">
+            <div v-show="panel.active == panel.id.LOCATE" id="locate" class="panel">
+                <div id="locateMenu">
+                    <button v-for="(item, index) in tool.locate.list" :title="item.name" class="esri-widget--button" :data-listid="item.id" v-on:click="setLocate">
+                        <img :src="item.icon" class="menu"></img>
+                    </button>
+                </div>
+                <div v-show="tool.locate.active == item.id" v-for="(item) in tool.locate.list" :id="item.id">
+                    <ul class="locateList" v-if="tool.locate.ready">
+                        <li v-for="(listItem) in item.list" class="esri-widget--button" :title="listItem.display" :data-listid="item.id" :data-value="listItem.value" v-on:click="setLocateItem">
+                            <img :src="item.icon" class="listIcon"></img>
+                            <span class="listText">{{listItem.display}}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div v-show="panel.active == panel.id.LAYER_LIST" id="layerList" class="panel">
+                <div id="layerListContainer"></div>
+            </div>
+            <div v-show="panel.active == panel.id.FEATURE" id="feature" class="panel">Feature</div>
+            <div v-show="panel.active == panel.id.LEGEND" id="legend" class="panel">
+                <div id="legendContainer"></div>
+            </div>
+            <div v-show="panel.active == panel.id.LOCATE_DETAIL" id="locateDetail" class="panel">
+                <div v-if="tool.locate.detail !== null">
+                    <h4>{{tool.locate.detail.location}}</h4>
+                    <div v-html="tool.locate.detail.image"></div>
+                    <a v-if="tool.locate.detail.website !== null" :href="tool.locate.detail.website" target="_blank">
+                        <h4><span>{{tool.locate.detail.websiteName}}&nbsp;</span><span style="float:right;padding: 0.25em" class="esri-icon-launch-link-external"></span></h4>
+                    </a>
+                    <a v-if="tool.locate.detail.video !== null" :href="tool.locate.detail.video" target="_blank">
+                        <h4><span>{{tool.locate.detail.videoName}}&nbsp;</span><span style="float:right;padding: 0.25em" class="esri-icon-launch-link-external"></span></h4>
+                    </a>
+                    <div v-html="tool.locate.detail.summary"></div>
+                    <div class="fieldList">
+                        <div v-for="(value, index) in tool.locate.detail.fieldList">
+                            <span class="fieldHeader">{{index}}: </span>
+                            <span class="fieldValue">{{value}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <div id="mapPanel">
+            <div v-show="map.active == map.id.TWOD" id="map2D" class="mapView"></div>
+            <div v-show="map.active == map.id.THREED" id="map3D" class="mapView"></div>
+            <div id="toolContainer">
+                <button id="buttonLocate" class="esri-widget--button" title="Locate">
+                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="mx-0 jimu-icon svg-component app-root-emotion-cache-ltr-1vuz6dz" width="16" height="16" aria-hidden="false"><path fill-rule="evenodd" clip-rule="evenodd" d="M13 6.133c0 .598-.28 1.46-.825 2.51-.53 1.02-1.247 2.102-1.981 3.102A45.718 45.718 0 0 1 8 14.492a48.01 48.01 0 0 1-2.194-2.747c-.734-1-1.451-2.081-1.98-3.102C3.28 7.593 3 6.731 3 6.133 3 3.277 5.26 1 8 1s5 2.277 5 5.133Zm1 0c0 2.685-3.768 7.311-5.332 9.115C8.258 15.722 8 16 8 16s-.258-.279-.668-.752C5.768 13.444 2 8.819 2 6.133 2 2.746 4.686 0 8 0s6 2.746 6 6.133ZM10 5.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm1 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" fill="currentColor"></path></svg>
+                </button>
+                <button id="buttonLayerList" class="esri-widget--button esri-icon-layers" title="Layer List">
+                    <div v-show="tool.layerList.updating" class="progress"></div>
+                </button>
+                <button id="buttonLegend" class="esri-widget--button esri-icon-legend" title="Legend"></button>
+                <button id="buttonFeature" class="esri-widget--button esri-icon-table" title="Selected Feature"></button>
+                <button id="buttonPrint" class="esri-widget--button esri-icon-printer" title="Print"></button>
+                <button id="buttonMap" class="esri-widget--button" v-on:click="toggleActiveMap">
+                    <span v-if="map.active == map.id.TWOD" >3D</span>
+                    <span v-if="map.active == map.id.THREED" >2D</span>
+                </button>
+                <button id="buttonMapSplit" class="esri-widget--button" v-on:click="" title="2D | 3D Map">
+                    <span class="esri-icon-maps"></span>
+                    <span class="esri-icon-public"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let container = document.querySelector("#appContainer");
+        let elementMap2D = document.querySelector("#map2D");
+        let elementMap3D = document.querySelector("#map3D");
+        let elementLayerList = document.querySelector("#layerList");
+        let elementLayerListContainer = document.querySelector("#layerListContainer");
+        let elementFeature = document.querySelector("#feature");
+        let elementLocate = document.querySelector("#locate");
+        let elementLegend = document.querySelector("#legend");
+        let legendContainer = document.querySelector("#legendContainer");
+        let elementLocateDetail = document.querySelector("#locateDetail");
+
+        const { createApp, ref } = Vue
+        createApp({
+            data() {
+                return {
+                    map: {
+                            id: {
+                                TWOD: elementMap2D.id,
+                                THREED: elementMap3D.id,
+                            },
+                            active: elementMap2D.id
+                        },
+                    panel: {
+                                id: {
+                                    LOCATE: elementLocate.id,
+                                    LAYER_LIST: elementLayerList.id,
+                                    LAYER_LIST_CONTAINER: elementLayerListContainer.id,
+                                    FEATURE: elementFeature.id,
+                                    LEGEND: elementLegend.id,
+                                    LEGEND_CONTAINER: legendContainer.id,
+                                    LOCATE_DETAIL: elementLocateDetail.id
+                                },
+                                active: elementLocate.id
+                    },
+                    tool: {
+                        locate: {
+                            list: [], 
+                            ready: false, 
+                            active: null,
+                            detail: null
+                        },
+                        layerList: {
+                            updating: true
+                        },
+                        mapType: {
+                            buttonMapTitleList: {
+                                MAP_2D: "2D Map",
+                                MAP_3D: "3D Map",
+                            },
+                            buttonMapActiveTitle: null
+                        }
+                    }
+                }
+            },
+            methods: {
+                        setLocate: (e)=>{
+                            applicationView.applicationObj.viewObj.tool.locate.active = e.currentTarget.dataset.listid;
+                        },
+                        setLocateItem: (e)=>{
+                            let element = e.currentTarget;
+                            let listID = element.dataset.listid;
+                            let listValue = element.dataset.value;
+                            applicationView.applicationObj.setLocateItem(listID, listValue);
+                        },
+                        setLocateDeatil: (detail)=>{
+                            detail.websiteName = null;
+                            if (detail.website !== null) {
+                                detail.websiteName = (new URL(detail.website)).hostname;
+                            }
+                            detail.videoName = null;
+                            if (detail.video !== null) {
+                                detail.videoName = (new URL(detail.video)).hostname;
+                            }
+                            
+                            let viewObj = applicationView.applicationObj.viewObj;
+                            viewObj.panel.active =  viewObj.panel.id.LOCATE_DETAIL;
+                            viewObj.tool.locate.detail = detail;
+                            
+                        },
+                        toggleActiveMap: ()=>{
+                            let applicationObj = applicationView.applicationObj;
+                            let viewObj = applicationObj.viewObj;
+                            if (viewObj.map.active == viewObj.map.id.TWOD) {
+                                applicationObj.sync3DMap(null);
+                                viewObj.map.active = viewObj.map.id.THREED;
+                            }
+                            else if (viewObj.map.active == viewObj.map.id.THREED) {
+                                applicationObj.sync2DMap(null);
+                                viewObj.map.active = viewObj.map.id.TWOD;
+                            }
+                        }
+            },
+            created() {
+                applicationView = this;
+                console.log('view: ', this.view);
+            }
+        }).mount("#" + container.id);
+        
+    </script>
+    <script src="bundle.js"></script>
+    <script>
+        let elementButtonLocate = document.querySelector("#buttonLocate");
+        let elementButtonLayerList = document.querySelector("#buttonLayerList");
+        let elementButtonLegend = document.querySelector("#buttonLegend");
+        let elementButtonFeature = document.querySelector("#buttonFeature");
+        let elementButtonPrint = document.querySelector("#buttonPrint");
+        elementButtonLocate.addEventListener("click", (e) => {
+            applicationView.panel.active = applicationView.panel.id.LOCATE;
+        });
+        elementButtonLayerList.addEventListener("click", (e) => {
+            applicationView.panel.active = applicationView.panel.id.LAYER_LIST;
+        });
+        elementButtonLegend.addEventListener("click", (e) => {
+            applicationView.panel.active = applicationView.panel.id.LEGEND;
+        });
+        elementButtonFeature.addEventListener("click", (e) => {
+            applicationView.panel.active = applicationView.panel.id.FEATURE;
+        });
+        elementButtonPrint.addEventListener("click", (e) => {
+            alert("Print to be implemented")
+        });
+    </script>
+</body>
+</html>
